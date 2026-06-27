@@ -5,15 +5,14 @@ Profit.OS/
 ├── ROADMAP.md
 ├── ARCHITECTURE.md
 ├── docs/
-│   ├── enforcement-kernel.md
-│   ├── memory-policy.md
-│   ├── verifier.md
-│   ├── insight-compiler.md
-│   └── pipeline.md
+│ ├── enforcement-kernel.md
+│ ├── memory-policy.md
+│ ├── verifier.md
+│ ├── insight-compiler.md
+│ └── pipeline.md
 ├── diagrams/
-│   └── profit-os-architecture.png
+│ └── profit-os-architecture.png
 └── .gitignore
-
 
 # Profit.OS
 
@@ -29,11 +28,11 @@ Its purpose is to assemble independent AI components into a deterministic execut
 
 Profit.OS follows several architectural principles:
 
-* Modular components with clearly defined responsibilities
-* Independent verification before execution
-* Memory separated from reasoning
-* Deterministic enforcement between AI and execution
-* Infrastructure that can evolve without redesigning the entire system
+- Modular components with clearly defined responsibilities
+- Independent verification before execution
+- Memory separated from reasoning
+- Deterministic enforcement between AI and execution
+- Infrastructure that can evolve without redesigning the entire system
 
 ---
 
@@ -67,11 +66,11 @@ Responsible for executing approved actions.
 
 Examples:
 
-* Bankr
-* Binance bridge
-* Coinbase
-* Kraken
-* Interactive Brokers
+- Bankr
+- Binance bridge
+- Coinbase
+- Kraken
+- Interactive Brokers
 
 ---
 
@@ -81,9 +80,9 @@ Independent evaluator responsible for validating candidate decisions before exec
 
 Examples:
 
-* Claude
-* GPT
-* Specialized evaluators
+- Claude
+- GPT
+- Specialized evaluators
 
 The verifier never executes trades.
 
@@ -95,11 +94,11 @@ The deterministic rule engine.
 
 Responsibilities include:
 
-* risk limits
-* position sizing
-* exposure limits
-* portfolio constraints
-* execution permissions
+- risk limits
+- position sizing
+- exposure limits
+- portfolio constraints
+- execution permissions
 
 No LLM bypasses this layer.
 
@@ -111,10 +110,10 @@ Compresses completed work into reusable knowledge.
 
 Examples:
 
-* post-trade reviews
-* strategy improvements
-* execution lessons
-* recurring patterns
+- post-trade reviews
+- strategy improvements
+- execution lessons
+- recurring patterns
 
 This prevents memory from becoming raw conversation history.
 
@@ -126,11 +125,11 @@ Controls what is allowed into long-term memory.
 
 Responsibilities:
 
-* filter noise
-* reject low-value observations
-* prevent duplicate memories
-* classify importance
-* determine persistence rules
+- filter noise
+- reject low-value observations
+- prevent duplicate memories
+- classify importance
+- determine persistence rules
 
 ---
 
@@ -140,9 +139,9 @@ Persistent long-term memory service.
 
 Responsibilities:
 
-* semantic storage
-* retrieval
-* cross-session memory
+- semantic storage
+- retrieval
+- cross-session memory
 
 Mem0 is infrastructure rather than reasoning.
 
@@ -154,7 +153,7 @@ Stores semantic embeddings.
 
 Example:
 
-* Qdrant
+- Qdrant
 
 ---
 
@@ -195,12 +194,12 @@ Future execution loops can reuse accumulated knowledge while keeping governance 
 
 For the Profit.OS use case:
 
-* Memory extraction still depends on an LLM, so poor extraction can create noisy memories unless write operations are gated.
-* Optimized for conversational personalization rather than financial operating systems.
-* Does not distinguish structural improvements from scalar improvements.
-* No evaluator isolation.
-* No enforcement kernel.
-* Does not implement the HARNESS learning loop.
+- Memory extraction still depends on an LLM, so poor extraction can create noisy memories unless write operations are gated.
+- Optimized for conversational personalization rather than financial operating systems.
+- Does not distinguish structural improvements from scalar improvements.
+- No evaluator isolation.
+- No enforcement kernel.
+- Does not implement the HARNESS learning loop.
 
 These are not flaws—they are outside Mem0's intended scope.
 
@@ -212,18 +211,18 @@ These are not flaws—they are outside Mem0's intended scope.
 
 ### Appropriate Responsibilities
 
-* Persistent long-term memory backend
-* Semantic retrieval engine
-* Cross-session memory service
-* Self-hosted memory infrastructure
+- Persistent long-term memory backend
+- Semantic retrieval engine
+- Cross-session memory service
+- Self-hosted memory infrastructure
 
 ### Not Appropriate For
 
-* Strategy evaluator
-* Automatic knowledge base
-* Governance layer
-* Memory policy engine
-* Insight compiler
+- Strategy evaluator
+- Automatic knowledge base
+- Governance layer
+- Memory policy engine
+- Insight compiler
 
 ---
 
