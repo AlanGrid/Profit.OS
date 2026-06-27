@@ -19,7 +19,7 @@ Profit.OS/
 > **Profit.OS is a liquidity-aware portfolio operating system designed to coordinate capital allocation, risk, and execution.**
 
 Profit.OS is an operating system for investing rather than another trading bot.
-
+Profit.OS is currently an internal operating system for AI-assisted decision-making and research. The public repository documents the architecture and core components. End-user applications, if any, are a future phase and are not the current focus.
 Its purpose is to assemble independent AI components into a deterministic execution pipeline where each layer has a single responsibility. Intelligence comes from structured evaluation, memory, governance, and execution—not from any individual model.
 
 ---
