@@ -22,7 +22,6 @@ body{background:var(--bg);color:var(--tp);font-family:var(--sans);min-height:100
 h1{font-size:18px;font-weight:500;margin-bottom:1.5rem;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
 
 /* ── Unified badge/chip form factor ── */
-/* All interactive tags share this base: same border-radius, same padding, same font-size, same border weight */
 .badge,
 .chip,
 .ticker-custom,
@@ -37,7 +36,6 @@ h1{font-size:18px;font-weight:500;margin-bottom:1.5rem;letter-spacing:-.01em;dis
   letter-spacing:.02em;
 }
 
-/* badge — static status indicator, matches persistent green */
 .badge{
   background:var(--obg);
   color:var(--ok);
@@ -47,7 +45,6 @@ h1{font-size:18px;font-weight:500;margin-bottom:1.5rem;letter-spacing:-.01em;dis
   align-items:center;
 }
 
-/* chip — ticker selector pill */
 .chip{
   cursor:pointer;
   border-color:var(--b);
@@ -61,7 +58,6 @@ h1{font-size:18px;font-weight:500;margin-bottom:1.5rem;letter-spacing:-.01em;dis
 .chip:hover{border-color:var(--bs);color:var(--tp)}
 .chip.active{background:var(--abg);color:var(--ac);border-color:var(--ab)}
 
-/* ticker custom input — same form factor, no extra radius */
 .ticker-custom{
   background:var(--s2);
   color:var(--tp);
@@ -73,7 +69,6 @@ h1{font-size:18px;font-weight:500;margin-bottom:1.5rem;letter-spacing:-.01em;dis
 .ticker-custom:focus{border-color:var(--ab)}
 .ticker-custom::placeholder{color:var(--tm)}
 
-/* direction chips inside field — same radius */
 .dir-chip{
   font-size:11px;
   font-weight:500;
@@ -110,9 +105,29 @@ h1{font-size:18px;font-weight:500;margin-bottom:1.5rem;letter-spacing:-.01em;dis
 .rv.good{color:var(--ok)}.rv.bad{color:var(--dn)}.rv.neutral{color:var(--ts)}
 .rq{font-size:12px;color:var(--tm);flex:1}
 
-/* gate violation banner */
 .gate-warn{display:none;background:var(--dbg);border:.5px solid var(--db);border-radius:var(--r);padding:8px 12px;font-size:12px;color:var(--dn);margin-bottom:10px;line-height:1.5}
 .gate-warn.show{display:block}
+
+/* pattern selector — same form factor as thesis textarea */
+.pattern-select{
+  width:100%;
+  background:var(--s2);
+  border:.5px solid var(--b);
+  border-radius:var(--r);
+  padding:10px 14px;
+  font-size:13px;
+  color:var(--tp);
+  font-family:var(--sans);
+  outline:none;
+  margin-bottom:10px;
+  transition:border-color .12s;
+  height:42px;
+}
+.pattern-select:focus{border-color:var(--bs)}
+
+.level-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.level-grid .field{padding:10px 14px}
+.level-grid .fi{font-size:15px}
 
 .thesis-wrap{margin-bottom:10px}
 .ti{width:100%;background:var(--s2);border:.5px solid var(--b);border-radius:var(--r);padding:12px 14px;font-size:13px;color:var(--tp);font-family:var(--sans);resize:none;outline:none;height:64px;transition:border-color .12s;line-height:1.5}
@@ -141,7 +156,6 @@ h1{font-size:18px;font-weight:500;margin-bottom:1.5rem;letter-spacing:-.01em;dis
 .vth em{color:var(--tm);font-style:normal}
 .va{display:flex;gap:8px;margin-top:12px;border-top:.5px solid var(--b);padding-top:12px}
 
-/* action buttons in verdict panel — same form factor */
 .ab{
   flex:1;
   padding:5px 10px;
@@ -165,7 +179,6 @@ hr{border:none;border-top:.5px solid var(--b);margin:1.75rem 0 1.25rem}
 .lt{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--tm)}
 .la{display:flex;gap:6px;align-items:center}
 
-/* journal inline buttons — same form factor */
 .lb{
   font-size:11px;
   font-weight:500;
@@ -195,7 +208,7 @@ hr{border:none;border-top:.5px solid var(--b);margin:1.75rem 0 1.25rem}
 .lf{display:flex;gap:14px;flex-wrap:wrap}
 .lfi{color:var(--tm)}.lfi span{color:var(--ts);font-family:var(--mono)}
 .lth{margin-top:6px;color:var(--tm);font-style:italic;line-height:1.4}
-@media(max-width:500px){.field-grid{grid-template-columns:1fr}.rr-row{flex-direction:column;align-items:flex-start;gap:6px}}
+@media(max-width:500px){.field-grid{grid-template-columns:1fr}.level-grid{grid-template-columns:1fr}.rr-row{flex-direction:column;align-items:flex-start;gap:6px}}
 </style>
 </head>
 <body>
@@ -213,7 +226,7 @@ hr{border:none;border-top:.5px solid var(--b);margin:1.75rem 0 1.25rem}
     <input class="ticker-custom" id="customTicker" placeholder="ticker…" maxlength="12"/>
   </div>
 
-  <!-- Direction row — LONG / SHORT selector, same form factor as chips -->
+  <!-- Direction row -->
   <div class="dir-row">
     <span class="dir-label">Direction</span>
     <div class="dir-chip long-active" id="dirLong" data-dir="LONG">LONG</div>
@@ -244,8 +257,35 @@ hr{border:none;border-top:.5px solid var(--b);margin:1.75rem 0 1.25rem}
     <span class="rl">Risk</span><span class="rv neutral" id="rrR">—</span>
   </div>
 
-  <!-- Gate violation banner — shows specific rejection reason -->
+  <!-- Gate violation banner -->
   <div class="gate-warn" id="gateWarn"></div>
+
+  <!-- Pattern selector — populates patternClass on PLAN_SET, replaces hardcoded "Indeterminate" default -->
+  <select class="pattern-select" id="pattern">
+    <option value="Indeterminate">— select pattern —</option>
+    <option value="Trend Continuation">Trend Continuation</option>
+    <option value="Liquidity Sweep">Liquidity Sweep</option>
+    <option value="Failed Breakdown">Failed Breakdown</option>
+    <option value="Breakout Retest">Breakout Retest</option>
+    <option value="Range Expansion">Range Expansion</option>
+    <option value="Mean Reversion">Mean Reversion</option>
+    <option value="Support Bounce">Support Bounce</option>
+    <option value="Resistance Rejection">Resistance Rejection</option>
+    <option value="Momentum Continuation">Momentum Continuation</option>
+    <option value="VWAP Reclaim">VWAP Reclaim</option>
+  </select>
+
+  <!-- Confirm / Invalid levels — optional, fall back to entry/stop if left blank -->
+  <div class="level-grid">
+    <div class="field">
+      <div class="fl">Confirm Level</div>
+      <input class="fi" id="confirmLevel" type="number" placeholder="optional" step="any"/>
+    </div>
+    <div class="field">
+      <div class="fl">Invalid Level</div>
+      <input class="fi" id="invalidLevel" type="number" placeholder="optional" step="any"/>
+    </div>
+  </div>
 
   <div class="thesis-wrap">
     <textarea class="ti" id="thesis" placeholder="one-line thesis — why this trade, why now…" maxlength="300"></textarea>
@@ -282,6 +322,7 @@ hr{border:none;border-top:.5px solid var(--b);margin:1.75rem 0 1.25rem}
 <script>
 const $=id=>document.getElementById(id);
 let sym='BTC',dir='LONG',timerStart=null,timerInt=null,elapsed=0,started=false,decided=false;
+let currentTradeId=null;
 
 // ── Ticker chips ──
 document.querySelectorAll('.chip').forEach(c=>{
@@ -328,14 +369,12 @@ function gv(id){return parseFloat($(id).value);}
 function gateCheck(e,s,t){
   const isLong = dir==='LONG';
 
-  // FIX 2: Minimum stop width — reject if stop distance < 0.1% of entry
   const stopDist=Math.abs(e-s);
   const minStop=e*0.001;
   if(stopDist<minStop){
     return`Stop too tight — ${stopDist.toFixed(6)} vs min ${minStop.toFixed(6)} (0.1% of entry). Structural stops only.`;
   }
 
-  // FIX 1: Direction coherence — LONG: target>entry, stop<entry; SHORT: target<entry, stop>entry
   if(isLong){
     if(s>=e) return`LONG stop must be below entry. Got stop ${s} ≥ entry ${e}.`;
     if(t<=e) return`LONG target must be above entry. Got target ${t} ≤ entry ${e}.`;
@@ -357,11 +396,9 @@ function update(){
   let rr=null,rp=null,ok=false,violation=null;
 
   if(hE&&hS&&hT){
-    // Run gate checks first
     violation=gateCheck(e,s,t);
 
     if(!violation){
-      // R/R uses absolute distances — direction-aware after gate passes
       const reward=Math.abs(t-e);
       const risk=Math.abs(e-s);
       rr=reward/risk;
@@ -373,7 +410,6 @@ function update(){
       $('rrR').textContent=rp.toFixed(2)+'%';
       $('rrR').className='rv '+(rp>5?'bad':rp>2?'neutral':'good');
     } else {
-      // Gate violation — reset R/R display
       $('rrD').textContent='— : —';$('rrD').className='rv neutral';
       $('rrQ').textContent='gate violation';$('rrR').textContent='—';$('rrR').className='rv neutral';
     }
@@ -382,7 +418,6 @@ function update(){
     $('rrQ').textContent='';$('rrR').textContent='—';$('rrR').className='rv neutral';
   }
 
-  // Gate warning banner
   const warn=$('gateWarn');
   if(violation){warn.textContent='⚠ GATE REJECT — '+violation;warn.className='gate-warn show';}
   else{warn.textContent='';warn.className='gate-warn';}
@@ -406,6 +441,14 @@ function update(){
   }
 }
 
+// ── tradeId generation: collision-resistant, sortable, no backend round-trip needed ──
+function genTradeId(sym,dir){
+  const ts=Date.now();
+  const rand=Array.from(crypto.getRandomValues(new Uint8Array(3)))
+    .map(b=>b.toString(16).padStart(2,'0')).join('');
+  return `${sym}-${dir}-${ts}-${rand}`;
+}
+
 $('execBtn').addEventListener('click',()=>{
   if(decided)return;
   const e=gv('entry'),s=gv('stop'),t=gv('target');
@@ -415,41 +458,79 @@ $('execBtn').addEventListener('click',()=>{
   const rr=reward/risk;
   if(rr<2)return;
   decided=true;clearInterval(timerInt);
-  const rp=((risk/e)*100).toFixed(2);
+  const rp=(risk/e)*100;
   const th=$('thesis').value.trim();
-  const now=new Date();
-  const ts=fmtTs(now);
-  const date=now.toISOString().slice(0,10);
+  const pattern=$('pattern').value;
+  const confirmLevelRaw=gv('confirmLevel');
+  const invalidLevelRaw=gv('invalidLevel');
+  const confirmLevel=isNaN(confirmLevelRaw)?e:confirmLevelRaw;
+  const invalidLevel=isNaN(invalidLevelRaw)?s:invalidLevelRaw;
+  const now=Date.now();
+
+  currentTradeId=genTradeId(sym,dir);
+
   $('execBtn').className='eb ex';$('execBtn').textContent='EXECUTE — '+sym+' '+dir+' — sent';
   $('vPanel').classList.add('show');
   $('vLabel').className='vl ex';$('vLabel').textContent='EXECUTE';
-  $('vGrid').innerHTML=`<div class="vi">Asset <span>${sym}</span></div><div class="vi">Direction <span>${dir}</span></div><div class="vi">Entry <span>${e}</span></div><div class="vi">Stop <span>${s}</span></div><div class="vi">Target <span>${t}</span></div><div class="vi">R/R <span>1:${rr.toFixed(2)}</span></div><div class="vi">Risk <span>${rp}%</span></div><div class="vi">Plan time <span>${elapsed}s</span></div>`;
-  $('vThesis').innerHTML='<em>Thesis:</em> '+th;
-  sendTrade({time:ts,date,asset:sym,side:dir,entry:e,stop:s,target:t,rr:rr.toFixed(2)});
+  $('vGrid').innerHTML=`<div class="vi">Asset <span>${sym}</span></div><div class="vi">Direction <span>${dir}</span></div><div class="vi">Entry <span>${e}</span></div><div class="vi">Stop <span>${s}</span></div><div class="vi">Target <span>${t}</span></div><div class="vi">R/R <span>1:${rr.toFixed(2)}</span></div><div class="vi">Risk <span>${rp.toFixed(2)}%</span></div><div class="vi">Plan time <span>${elapsed}s</span></div>`;
+  $('vThesis').innerHTML='<em>Thesis:</em> '+th+' <span style="color:var(--tm)">['+pattern+']</span>';
+
+  // ── PLAN_SET event — matches events.types.ts TradePlan exactly ──
+  const planSetEvent={
+    type:'PLAN_SET',
+    tradeId:currentTradeId,
+    timestamp:now,
+    planTimeSecs:elapsed,
+    plan:{
+      ticker:sym,
+      direction:dir,
+      entryPrice:e,
+      stopPrice:s,
+      targetPrice:t,
+      riskPct:rp,
+      rrRatio:rr,
+      patternClass:pattern,
+      thesis:th,
+      confirmLevel:confirmLevel,
+      invalidLevel:invalidLevel
+    }
+  };
+
+  // ── EXECUTE event — MANUAL origin, no engine state fields (structurally absent per type) ──
+  const executeEvent={
+    type:'EXECUTE',
+    tradeId:currentTradeId,
+    timestamp:Date.now(),
+    executionType:'MANUAL',
+    source:'ui'
+  };
+
+  sendEvent(planSetEvent).then(()=>sendEvent(executeEvent));
 });
 
-// ── ONE logging mechanism: POST to local writer, append-only file ──
-const WRITER_ENDPOINT='http://localhost:3117/trade';
+// ── ONE logging mechanism: POST to event listener, strict ingestion ──
+// HTML UI -> emits events -> /event -> JSONL immutable ledger -> Obsidian projection
+const EVENT_ENDPOINT='http://localhost:8787/event';
 
-async function sendTrade(payload){
+async function sendEvent(event){
   const status=$('writerStatus');
-  status.textContent='writing…';status.style.color='var(--tm)';
+  status.textContent='writing '+event.type+'…';status.style.color='var(--tm)';
   try{
-    const res=await fetch(WRITER_ENDPOINT,{
+    const res=await fetch(EVENT_ENDPOINT,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload)
+      body:JSON.stringify(event)
     });
     const data=await res.json();
     if(data.ok){
-      status.textContent='✓ logged — '+payload.asset+' '+payload.date;
+      status.textContent='✓ '+event.type+' logged — '+currentTradeId;
       status.style.color='var(--ok)';
     } else {
       status.textContent='✗ write failed — '+data.error;
       status.style.color='var(--dn)';
     }
   }catch(err){
-    status.textContent='✗ writer offline — run server.js';
+    status.textContent='✗ listener offline — run local-listener.ts on :8787';
     status.style.color='var(--dn)';
   }
 }
@@ -463,9 +544,10 @@ function fmtTs(d){
 }
 
 function reset(){
-  decided=false;started=false;clearInterval(timerInt);elapsed=0;dir='LONG';
+  decided=false;started=false;clearInterval(timerInt);elapsed=0;dir='LONG';currentTradeId=null;
   $('tDisp').textContent='0s';$('tFill').style.width='0%';$('tFill').className='tfill';
-  ['entry','stop','target'].forEach(id=>$(id).value='');$('thesis').value='';
+  ['entry','stop','target','confirmLevel','invalidLevel'].forEach(id=>$(id).value='');$('thesis').value='';
+  $('pattern').value='Indeterminate';
   $('vPanel').classList.remove('show');$('execBtn').className='eb';$('execBtn').disabled=true;
   $('execBtn').textContent='fill all fields to unlock';
   $('gateWarn').className='gate-warn';$('gateWarn').textContent='';
@@ -476,6 +558,8 @@ function reset(){
   $('dirShort').className='dir-chip';
   sym='BTC';$('customTicker').value='';$('eSub').textContent='';update();
 }
+
+$('resetBtn').addEventListener('click',reset);
 </script>
 </body>
 </html>
