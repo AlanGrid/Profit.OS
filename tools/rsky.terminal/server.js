@@ -1,36 +1,8 @@
 // ============================================================
-// DEPRECATED — DO NOT RUN
+// rsky.trade writer — ONE job: POST /trade -> append one line
+// No event system. No reducer. No state.
+// Run: node server.js
 // ============================================================
-// This writer is retired as of the rsky.trade.html -> :8787/event
-// migration. It wrote flat pipe-delimited lines to
-// rsky.crv\03-Journal\jup.trades\*.log, bypassing the event-sourced
-// journal entirely (no tradeId, no pattern, no PLAN_SET/EXECUTE/EXIT
-// lifecycle — just a single line per trade with no outcome tracking).
-//
-// Current architecture:
-//   HTML UI -> emits events -> /event (local-listener.ts)
-//     -> JSONL immutable ledger (write-event.ts -> journal.jsonl)
-//     -> Obsidian projection (read-model.ts)
-//
-// rsky_trade.html now posts directly to local-listener.ts on :8787.
-// This file is kept in the repo only as a historical reference for
-// the old .log format that earlier trade logs (e.g.
-// rsky.trade-jup-2026-06-28.log) were written in. It refuses to run
-// to prevent accidentally reintroducing a second, disconnected write
-// path into the system.
-//
-// If you need the old flat-log trail for some reason, do not revive
-// this — instead derive it from journal.jsonl via a read-model
-// projection, so there remains exactly ONE source of truth.
-// ============================================================
-
-throw new Error(
-  "server.js is deprecated and retired. Trade events now flow " +
-  "HTML -> local-listener.ts (:8787/event) -> journal.jsonl. " +
-  "Do not run this file. See header comment for details."
-);
-
-/* ---- original implementation, preserved for reference only ----
 
 import http from "http";
 import fs from "fs";
@@ -62,6 +34,7 @@ const server = http.createServer((req, res) => {
     try {
       const t = JSON.parse(body);
 
+      // required fields — fail loud if filter sent something malformed
       const required = ["time", "asset", "side", "entry", "stop", "target", "rr", "date"];
       for (const k of required) {
         if (t[k] === undefined || t[k] === null || t[k] === "") {
@@ -93,5 +66,3 @@ server.listen(PORT, () => {
   console.log(`rsky.trade writer listening on http://localhost:${PORT}/trade`);
   console.log(`writing to: ${JOURNAL_DIR}`);
 });
-
----- end original implementation ---- */
