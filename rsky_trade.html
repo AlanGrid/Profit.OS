@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>rsky.trade terminal</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#1a1a1a;--s1:#222;--s2:#2a2a2a;--s3:#323232;
+  --b:rgba(255,255,255,0.1);--bs:rgba(255,255,255,0.18);
+  --tp:#f0f0ee;--ts:#a0a09a;--tm:#666660;
+  --ac:#378add;--abg:rgba(55,138,221,0.12);--ab:rgba(55,138,221,0.35);
+  --dn:#e24b4a;--dbg:rgba(226,75,74,0.12);--db:rgba(226,75,74,0.35);
+  --ok:#639922;--obg:rgba(99,153,34,0.12);--ob:rgba(99,153,34,0.35);
+  --wn:#ba7517;--r:8px;
+  --mono:'SF Mono','Fira Mono',Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
+body{background:var(--bg);color:var(--tp);font-family:var(--sans);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem}
+.gate{width:100%;max-width:640px}
+.os-label{font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--tm);margin-bottom:.4rem}
+h1{font-size:18px;font-weight:500;margin-bottom:1.5rem;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+
+/* ── Unified badge/chip form factor ── */
+/* All interactive tags share this base: same border-radius, same padding, same font-size, same border weight */
+.badge,
+.chip,
+.ticker-custom,
+.ab,
+.lb {
+  font-size:11px;
+  font-weight:500;
+  padding:3px 9px;
+  border-radius:5px;
+  border:.5px solid var(--ob);
+  font-family:var(--sans);
+  letter-spacing:.02em;
+}
+
+/* badge — static status indicator, matches persistent green */
+.badge{
+  background:var(--obg);
+  color:var(--ok);
+  border-color:var(--ob);
+  cursor:default;
+  display:inline-flex;
+  align-items:center;
+}
+
+/* chip — ticker selector pill */
+.chip{
+  cursor:pointer;
+  border-color:var(--b);
+  background:var(--s2);
+  color:var(--ts);
+  transition:all .12s;
+  user-select:none;
+  display:inline-flex;
+  align-items:center;
+}
+.chip:hover{border-color:var(--bs);color:var(--tp)}
+.chip.active{background:var(--abg);color:var(--ac);border-color:var(--ab)}
+
+/* ticker custom input — same form factor, no extra radius */
+.ticker-custom{
+  background:var(--s2);
+  color:var(--tp);
+  border-color:var(--b);
+  outline:none;
+  width:90px;
+  height:26px;
+}
+.ticker-custom:focus{border-color:var(--ab)}
+.ticker-custom::placeholder{color:var(--tm)}
+
+/* direction chips inside field — same radius */
+.dir-chip{
+  font-size:11px;
+  font-weight:500;
+  padding:3px 9px;
+  border-radius:5px;
+  border:.5px solid var(--b);
+  background:var(--s2);
+  color:var(--ts);
+  cursor:pointer;
+  user-select:none;
+  transition:all .12s;
+  font-family:var(--sans);
+}
+.dir-chip:hover{border-color:var(--bs);color:var(--tp)}
+.dir-chip.long-active{background:var(--obg);color:var(--ok);border-color:var(--ob)}
+.dir-chip.short-active{background:var(--dbg);color:var(--dn);border-color:var(--db)}
+
+.ticker-row{display:flex;gap:6px;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center}
+.dir-row{display:flex;gap:6px;margin-bottom:10px;align-items:center}
+.dir-label{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--tm);margin-right:2px}
+
+.field-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.field{background:var(--s2);border:.5px solid var(--b);border-radius:12px;padding:14px 16px;transition:border-color .12s}
+.field:focus-within,.field.filled{border-color:var(--bs)}
+.fl{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--tm);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.de{background:var(--ac)}.ds{background:var(--dn)}.dt{background:var(--ok)}
+.fi{font-size:22px;font-weight:500;color:var(--tp);background:transparent;border:none;outline:none;width:100%;font-family:var(--mono)}
+.fi::placeholder{color:var(--tm);font-size:18px;font-weight:400}
+.fsub{font-size:11px;color:var(--tm);margin-top:6px;min-height:14px}
+.rr-row{background:var(--s1);border:.5px solid var(--b);border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.rl{font-size:12px;color:var(--tm)}
+.rv{font-size:14px;font-weight:500;font-family:var(--mono);color:var(--ts)}
+.rv.good{color:var(--ok)}.rv.bad{color:var(--dn)}.rv.neutral{color:var(--ts)}
+.rq{font-size:12px;color:var(--tm);flex:1}
+
+/* gate violation banner */
+.gate-warn{display:none;background:var(--dbg);border:.5px solid var(--db);border-radius:var(--r);padding:8px 12px;font-size:12px;color:var(--dn);margin-bottom:10px;line-height:1.5}
+.gate-warn.show{display:block}
+
+.thesis-wrap{margin-bottom:10px}
+.ti{width:100%;background:var(--s2);border:.5px solid var(--b);border-radius:var(--r);padding:12px 14px;font-size:13px;color:var(--tp);font-family:var(--sans);resize:none;outline:none;height:64px;transition:border-color .12s;line-height:1.5}
+.ti:focus{border-color:var(--bs)}
+.ti::placeholder{color:var(--tm)}
+.timer-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.tl{font-size:12px;color:var(--tm);white-space:nowrap}
+.td{font-size:12px;font-weight:500;font-family:var(--mono);color:var(--ts);min-width:32px}
+.tbar{flex:1;height:2px;background:var(--s3);border-radius:2px;overflow:hidden}
+.tfill{height:100%;background:var(--ac);border-radius:2px;transition:width .5s linear,background .3s;width:0%}
+.tfill.w{background:var(--wn)}.tfill.o{background:var(--dn)}
+.eb{width:100%;padding:13px;border-radius:var(--r);border:.5px solid var(--b);font-size:14px;font-weight:500;cursor:not-allowed;transition:all .15s;letter-spacing:.05em;font-family:var(--sans);background:var(--s1);color:var(--tm);text-transform:uppercase}
+.eb.u{background:var(--ac);color:#fff;border-color:var(--ac);cursor:pointer}.eb.u:hover{opacity:.88}
+.eb.rj{background:var(--dbg);color:var(--dn);border-color:var(--db);cursor:default}
+.eb.ex{background:var(--obg);color:var(--ok);border-color:var(--ob);cursor:default}
+.ls{display:flex;align-items:center;gap:6px;justify-content:center;margin-top:10px}
+.ld{width:5px;height:5px;border-radius:50%;background:var(--s3)}.ld.on{background:var(--ok)}
+.lst{font-size:11px;color:var(--tm)}
+.vp{margin-top:1rem;background:var(--s1);border:.5px solid var(--b);border-radius:var(--r);padding:14px 16px;display:none}
+.vp.show{display:block}
+.vl{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+.vl.ex{color:var(--ok)}.vl.rj{color:var(--dn)}
+.vg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.vi{font-size:12px;color:var(--ts)}.vi span{font-weight:500;color:var(--tp);font-family:var(--mono)}
+.vth{font-size:12px;color:var(--ts);border-top:.5px solid var(--b);padding-top:8px;margin-top:4px;line-height:1.5}
+.vth em{color:var(--tm);font-style:normal}
+.va{display:flex;gap:8px;margin-top:12px;border-top:.5px solid var(--b);padding-top:12px}
+
+/* action buttons in verdict panel — same form factor */
+.ab{
+  flex:1;
+  padding:5px 10px;
+  border-radius:5px;
+  border:.5px solid var(--b);
+  font-size:11px;
+  font-weight:500;
+  cursor:pointer;
+  font-family:var(--sans);
+  background:var(--s2);
+  color:var(--ts);
+  transition:all .12s;
+  text-align:center;
+  letter-spacing:.02em;
+}
+.ab:hover{border-color:var(--bs);color:var(--tp)}
+.ab.exp{background:var(--abg);color:var(--ac);border-color:var(--ab)}.ab.exp:hover{opacity:.85}
+
+hr{border:none;border-top:.5px solid var(--b);margin:1.75rem 0 1.25rem}
+.lh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.lt{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--tm)}
+.la{display:flex;gap:6px;align-items:center}
+
+/* journal inline buttons — same form factor */
+.lb{
+  font-size:11px;
+  font-weight:500;
+  padding:3px 9px;
+  border-radius:5px;
+  border:.5px solid var(--b);
+  background:var(--s2);
+  color:var(--ts);
+  cursor:pointer;
+  font-family:var(--sans);
+  transition:all .12s;
+  text-decoration:none;
+}
+.lb:hover{border-color:var(--bs);color:var(--tp)}
+.lb.d{border-color:var(--db);color:var(--dn);background:var(--dbg)}
+.lb.d:hover{opacity:.8}
+
+.lc{font-size:11px;color:var(--tm);font-family:var(--mono)}
+.le{font-size:13px;color:var(--tm);padding:10px 0}
+.lentry{background:var(--s2);border:.5px solid var(--b);border-radius:var(--r);padding:10px 14px;margin-bottom:8px;font-size:12px}
+.leh{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.lsym{font-weight:600;font-size:13px;color:var(--tp);font-family:var(--mono)}
+.ldir{font-size:11px;padding:2px 8px;border-radius:5px;font-weight:500}
+.ldir.long{background:var(--obg);color:var(--ok);border:.5px solid var(--ob)}
+.ldir.short{background:var(--dbg);color:var(--dn);border:.5px solid var(--db)}
+.lts{font-size:11px;color:var(--tm);font-family:var(--mono);margin-left:auto}
+.lf{display:flex;gap:14px;flex-wrap:wrap}
+.lfi{color:var(--tm)}.lfi span{color:var(--ts);font-family:var(--mono)}
+.lth{margin-top:6px;color:var(--tm);font-style:italic;line-height:1.4}
+@media(max-width:500px){.field-grid{grid-template-columns:1fr}.rr-row{flex-direction:column;align-items:flex-start;gap:6px}}
+</style>
+</head>
+<body>
+<div class="gate">
+  <div class="os-label">PROFIT.OS</div>
+  <h1>rsky.trade terminal <span class="badge">persistent</span></h1>
+
+  <!-- Ticker row -->
+  <div class="ticker-row">
+    <div class="chip active" data-sym="BTC">BTC</div>
+    <div class="chip" data-sym="ETH">ETH</div>
+    <div class="chip" data-sym="SOL">SOL</div>
+    <div class="chip" data-sym="TIA">TIA</div>
+    <div class="chip" data-sym="JUP">JUP</div>
+    <input class="ticker-custom" id="customTicker" placeholder="ticker…" maxlength="12"/>
+  </div>
+
+  <!-- Direction row — LONG / SHORT selector, same form factor as chips -->
+  <div class="dir-row">
+    <span class="dir-label">Direction</span>
+    <div class="dir-chip long-active" id="dirLong" data-dir="LONG">LONG</div>
+    <div class="dir-chip" id="dirShort" data-dir="SHORT">SHORT</div>
+  </div>
+
+  <div class="field-grid">
+    <div class="field" id="fE">
+      <div class="fl"><span class="dot de"></span>Entry</div>
+      <input class="fi" id="entry" type="number" placeholder="0.00" step="any"/>
+      <div class="fsub" id="eSub"></div>
+    </div>
+    <div class="field" id="fS">
+      <div class="fl"><span class="dot ds"></span>Stop</div>
+      <input class="fi" id="stop" type="number" placeholder="0.00" step="any"/>
+      <div class="fsub" id="sSub">thesis invalidated</div>
+    </div>
+    <div class="field" id="fT">
+      <div class="fl"><span class="dot dt"></span>Target</div>
+      <input class="fi" id="target" type="number" placeholder="0.00" step="any"/>
+      <div class="fsub" id="tSub">next liquidity level</div>
+    </div>
+  </div>
+
+  <div class="rr-row">
+    <span class="rl">R/R</span><span class="rv neutral" id="rrD">— : —</span>
+    <span class="rq" id="rrQ"></span>
+    <span class="rl">Risk</span><span class="rv neutral" id="rrR">—</span>
+  </div>
+
+  <!-- Gate violation banner — shows specific rejection reason -->
+  <div class="gate-warn" id="gateWarn"></div>
+
+  <div class="thesis-wrap">
+    <textarea class="ti" id="thesis" placeholder="one-line thesis — why this trade, why now…" maxlength="300"></textarea>
+  </div>
+  <div class="timer-row">
+    <span class="tl">Plan time</span>
+    <span class="td" id="tDisp">0s</span>
+    <div class="tbar"><div class="tfill" id="tFill"></div></div>
+    <span class="tl">30s target</span>
+  </div>
+  <button class="eb" id="execBtn" disabled>fill all fields to unlock</button>
+  <div class="ls">
+    <div class="ld" id="d1"></div><div class="ld" id="d2"></div>
+    <div class="ld" id="d3"></div><div class="ld" id="d4"></div>
+    <span class="lst">entry · stop · target · thesis</span>
+  </div>
+
+  <div class="vp" id="vPanel">
+    <div class="vl" id="vLabel"></div>
+    <div class="vg" id="vGrid"></div>
+    <div class="vth" id="vThesis"></div>
+    <div class="va">
+      <button class="ab" id="resetBtn">new trade</button>
+    </div>
+  </div>
+
+  <hr>
+  <div class="lh">
+    <span class="lt">writer status</span>
+    <span class="lc" id="writerStatus">—</span>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let sym='BTC',dir='LONG',timerStart=null,timerInt=null,elapsed=0,started=false,decided=false;
+
+// ── Ticker chips ──
+document.querySelectorAll('.chip').forEach(c=>{
+  c.addEventListener('click',()=>{
+    document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active');sym=c.dataset.sym;$('customTicker').value='';
+    $('eSub').textContent=sym+' entry';update();
+  });
+});
+$('customTicker').addEventListener('input',()=>{
+  const v=$('customTicker').value.trim().toUpperCase();
+  if(v){document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));sym=v;$('eSub').textContent=sym+' entry';}
+  update();
+});
+
+// ── Direction chips ──
+document.querySelectorAll('.dir-chip').forEach(c=>{
+  c.addEventListener('click',()=>{
+    dir=c.dataset.dir;
+    $('dirLong').className='dir-chip'+(dir==='LONG'?' long-active':'');
+    $('dirShort').className='dir-chip'+(dir==='SHORT'?' short-active':'');
+    update();
+  });
+});
+
+['entry','stop','target','thesis'].forEach(id=>{
+  $(id).addEventListener('input',()=>{
+    if(!started){started=true;timerStart=Date.now();timerInt=setInterval(tick,500);}
+    update();
+  });
+});
+
+function tick(){
+  elapsed=Math.floor((Date.now()-timerStart)/1000);
+  $('tDisp').textContent=elapsed+'s';
+  const p=Math.min((elapsed/30)*100,100);
+  $('tFill').style.width=p+'%';
+  $('tFill').className='tfill'+(elapsed>30?' o':elapsed>20?' w':'');
+}
+
+function gv(id){return parseFloat($(id).value);}
+
+// ── Gate checks — returns first violation string or null ──
+function gateCheck(e,s,t){
+  const isLong = dir==='LONG';
+
+  // FIX 2: Minimum stop width — reject if stop distance < 0.1% of entry
+  const stopDist=Math.abs(e-s);
+  const minStop=e*0.001;
+  if(stopDist<minStop){
+    return`Stop too tight — ${stopDist.toFixed(6)} vs min ${minStop.toFixed(6)} (0.1% of entry). Structural stops only.`;
+  }
+
+  // FIX 1: Direction coherence — LONG: target>entry, stop<entry; SHORT: target<entry, stop>entry
+  if(isLong){
+    if(s>=e) return`LONG stop must be below entry. Got stop ${s} ≥ entry ${e}.`;
+    if(t<=e) return`LONG target must be above entry. Got target ${t} ≤ entry ${e}.`;
+  } else {
+    if(s<=e) return`SHORT stop must be above entry. Got stop ${s} ≤ entry ${e}.`;
+    if(t>=e) return`SHORT target must be below entry. Got target ${t} ≥ entry ${e}.`;
+  }
+
+  return null;
+}
+
+function update(){
+  const e=gv('entry'),s=gv('stop'),t=gv('target'),th=$('thesis').value.trim();
+  const hE=!isNaN(e)&&e>0,hS=!isNaN(s)&&s>0,hT=!isNaN(t)&&t>0,hTh=th.length>=10;
+  [$('d1'),$('d2'),$('d3'),$('d4')].forEach((d,i)=>d.classList.toggle('on',[hE,hS,hT,hTh][i]));
+  if(hE){$('fE').classList.add('filled');$('eSub').textContent=sym+' entry';}else $('fE').classList.remove('filled');
+  $('fS').classList.toggle('filled',hS);$('fT').classList.toggle('filled',hT);
+
+  let rr=null,rp=null,ok=false,violation=null;
+
+  if(hE&&hS&&hT){
+    // Run gate checks first
+    violation=gateCheck(e,s,t);
+
+    if(!violation){
+      // R/R uses absolute distances — direction-aware after gate passes
+      const reward=Math.abs(t-e);
+      const risk=Math.abs(e-s);
+      rr=reward/risk;
+      rp=(risk/e)*100;
+      ok=rr>=2;
+      $('rrD').textContent='1 : '+rr.toFixed(2);
+      $('rrD').className='rv '+(rr>=3?'good':rr>=2?'neutral':'bad');
+      $('rrQ').textContent=rr>=3?'strong':rr>=2?'acceptable':'below 2:1 — will reject';
+      $('rrR').textContent=rp.toFixed(2)+'%';
+      $('rrR').className='rv '+(rp>5?'bad':rp>2?'neutral':'good');
+    } else {
+      // Gate violation — reset R/R display
+      $('rrD').textContent='— : —';$('rrD').className='rv neutral';
+      $('rrQ').textContent='gate violation';$('rrR').textContent='—';$('rrR').className='rv neutral';
+    }
+  } else {
+    $('rrD').textContent='— : —';$('rrD').className='rv neutral';
+    $('rrQ').textContent='';$('rrR').textContent='—';$('rrR').className='rv neutral';
+  }
+
+  // Gate warning banner
+  const warn=$('gateWarn');
+  if(violation){warn.textContent='⚠ GATE REJECT — '+violation;warn.className='gate-warn show';}
+  else{warn.textContent='';warn.className='gate-warn';}
+
+  if(!decided){
+    const btn=$('execBtn'),all=hE&&hS&&hT&&hTh;
+    if(all){
+      btn.disabled=false;
+      if(violation){
+        btn.className='eb rj';btn.textContent='REJECT — '+violation.split('—')[0].trim();
+      } else if(!ok){
+        btn.className='eb rj';btn.textContent='REJECT — R/R below 2:1 ('+(rr?rr.toFixed(2):'?')+':1)';
+      } else {
+        btn.className='eb u';btn.textContent='EXECUTE — '+sym+' '+dir;
+      }
+    } else {
+      btn.disabled=true;btn.className='eb';
+      const m=[];if(!hE)m.push('entry');if(!hS)m.push('stop');if(!hT)m.push('target');if(!hTh)m.push('thesis');
+      btn.textContent='waiting — '+m.join(', ');
+    }
+  }
+}
+
+$('execBtn').addEventListener('click',()=>{
+  if(decided)return;
+  const e=gv('entry'),s=gv('stop'),t=gv('target');
+  const violation=gateCheck(e,s,t);
+  if(violation)return;
+  const reward=Math.abs(t-e),risk=Math.abs(e-s);
+  const rr=reward/risk;
+  if(rr<2)return;
+  decided=true;clearInterval(timerInt);
+  const rp=((risk/e)*100).toFixed(2);
+  const th=$('thesis').value.trim();
+  const now=new Date();
+  const ts=fmtTs(now);
+  const date=now.toISOString().slice(0,10);
+  $('execBtn').className='eb ex';$('execBtn').textContent='EXECUTE — '+sym+' '+dir+' — sent';
+  $('vPanel').classList.add('show');
+  $('vLabel').className='vl ex';$('vLabel').textContent='EXECUTE';
+  $('vGrid').innerHTML=`<div class="vi">Asset <span>${sym}</span></div><div class="vi">Direction <span>${dir}</span></div><div class="vi">Entry <span>${e}</span></div><div class="vi">Stop <span>${s}</span></div><div class="vi">Target <span>${t}</span></div><div class="vi">R/R <span>1:${rr.toFixed(2)}</span></div><div class="vi">Risk <span>${rp}%</span></div><div class="vi">Plan time <span>${elapsed}s</span></div>`;
+  $('vThesis').innerHTML='<em>Thesis:</em> '+th;
+  sendTrade({time:ts,date,asset:sym,side:dir,entry:e,stop:s,target:t,rr:rr.toFixed(2)});
+});
+
+// ── ONE logging mechanism: POST to local writer, append-only file ──
+const WRITER_ENDPOINT='http://localhost:3117/trade';
+
+async function sendTrade(payload){
+  const status=$('writerStatus');
+  status.textContent='writing…';status.style.color='var(--tm)';
+  try{
+    const res=await fetch(WRITER_ENDPOINT,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    });
+    const data=await res.json();
+    if(data.ok){
+      status.textContent='✓ logged — '+payload.asset+' '+payload.date;
+      status.style.color='var(--ok)';
+    } else {
+      status.textContent='✗ write failed — '+data.error;
+      status.style.color='var(--dn)';
+    }
+  }catch(err){
+    status.textContent='✗ writer offline — run server.js';
+    status.style.color='var(--dn)';
+  }
+}
+
+function fmtTs(d){
+  const p=n=>String(n).padStart(2,'0');
+  const off=-d.getTimezoneOffset();
+  const sign=off>=0?'+':'-';
+  const oh=p(Math.floor(Math.abs(off)/60));
+  return`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())} (${sign}${oh})`;
+}
+
+function reset(){
+  decided=false;started=false;clearInterval(timerInt);elapsed=0;dir='LONG';
+  $('tDisp').textContent='0s';$('tFill').style.width='0%';$('tFill').className='tfill';
+  ['entry','stop','target'].forEach(id=>$(id).value='');$('thesis').value='';
+  $('vPanel').classList.remove('show');$('execBtn').className='eb';$('execBtn').disabled=true;
+  $('execBtn').textContent='fill all fields to unlock';
+  $('gateWarn').className='gate-warn';$('gateWarn').textContent='';
+  $('writerStatus').textContent='—';$('writerStatus').style.color='var(--tm)';
+  document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.chip')[0].classList.add('active');
+  $('dirLong').className='dir-chip long-active';
+  $('dirShort').className='dir-chip';
+  sym='BTC';$('customTicker').value='';$('eSub').textContent='';update();
+}
+</script>
+</body>
+</html>
